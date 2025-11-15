@@ -164,6 +164,16 @@
             word-break: break-all;
         }
 
+        .cookie-value {
+            font-family: monospace;
+            background: #fff3cd;
+            padding: 8px;
+            border-radius: 4px;
+            margin-top: 5px;
+            word-break: break-all;
+            border-left: 3px solid #ffc107;
+        }
+
         .loading {
             text-align: center;
             padding: 20px;
@@ -182,6 +192,14 @@
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 15px;
+        }
+
+        .info-box {
+            background: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
         }
 
         @media (max-width: 768px) {
@@ -207,6 +225,12 @@
         </div>
 
         <div class="card">
+            <div class="info-box">
+                <strong>📝 Hướng dẫn sử dụng:</strong>
+                <p>Endpoint: <code>GET /api/token?cookie={cookie}&type={tokenType}</code></p>
+                <p>Cookie sẽ được tự động encode và decode</p>
+            </div>
+
             <div class="form-group">
                 <label for="cookieInput">Facebook Cookie:</label>
                 <textarea 
@@ -218,14 +242,13 @@
             <div class="form-group">
                 <label for="tokenType">Loại Token:</label>
                 <select id="tokenType">
-                    <option value="all">Tất cả các loại token</option>
+                    <option value="ALL">Tất cả các loại token</option>
                     <!-- Options will be populated by JavaScript -->
                 </select>
             </div>
 
             <div class="button-group">
                 <button onclick="getToken()" id="getTokenBtn">Lấy Token</button>
-                <button onclick="getAllTokens()" id="getAllTokensBtn" class="secondary">Lấy Tất Cả Token</button>
                 <button onclick="clearResults()" class="secondary">Xóa Kết Quả</button>
             </div>
         </div>
@@ -273,24 +296,17 @@
                 return;
             }
 
-            if (tokenType === 'all') {
-                getAllTokens();
-                return;
-            }
-
             showLoading();
             
             try {
-                const response = await fetch(`/api/token/${tokenType}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ cookie })
-                });
-
+                // Encode cookie trước khi gửi
+                const encodedCookie = encodeURIComponent(cookie);
+                const url = `/api/token?cookie=${encodedCookie}&type=${tokenType}`;
+                
+                const response = await fetch(url);
                 const result = await response.json();
-                displaySingleResult(result);
+                
+                displayResult(result, tokenType);
             } catch (error) {
                 displayError('Lỗi kết nối: ' + error.message);
             } finally {
@@ -298,83 +314,70 @@
             }
         }
 
-        async function getAllTokens() {
-            const cookie = document.getElementById('cookieInput').value.trim();
-            
-            if (!cookie) {
-                alert('Vui lòng nhập cookie Facebook!');
-                return;
-            }
-
-            showLoading();
-            
-            try {
-                const response = await fetch('/api/tokens/all', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ cookie })
-                });
-
-                const result = await response.json();
-                displayAllResults(result);
-            } catch (error) {
-                displayError('Lỗi kết nối: ' + error.message);
-            } finally {
-                hideLoading();
-            }
-        }
-
-        function displaySingleResult(result) {
+        function displayResult(result, requestedType) {
             const resultDiv = document.getElementById('result');
-            resultDiv.className = 'card ' + (result.code === 200 ? 'token-result' : 'error');
             
-            let html = `
-                <h3>Kết quả: ${result.tokenType}</h3>
-                <p><strong>Trạng thái:</strong> ${result.message}</p>
-                <p><strong>Mã:</strong> ${result.code}</p>
-            `;
+            if (result.code === 200) {
+                resultDiv.className = 'card token-result';
+            } else {
+                resultDiv.className = 'card error';
+            }
             
-            if (result.token) {
+            let html = '';
+            
+            // Hiển thị cookie
+            if (result.cookie) {
                 html += `
-                    <div class="token-item token-success">
-                        <div class="token-type">Token:</div>
-                        <div class="token-value">${result.token}</div>
+                    <div class="info-box">
+                        <h4>🔑 Cookie đã sử dụng:</h4>
+                        <div class="cookie-value">${result.cookie}</div>
                     </div>
-                    <button onclick="copyToClipboard('${result.token}')" style="margin-top: 10px;">Sao chép Token</button>
                 `;
             }
             
-            resultDiv.innerHTML = html;
-            resultDiv.classList.remove('hidden');
-        }
-
-        function displayAllResults(result) {
-            const resultDiv = document.getElementById('result');
-            resultDiv.className = 'card';
-            
-            let html = `
-                <h3>Kết quả tất cả token</h3>
-                <div class="stats">
-                    <span>Tổng: ${result.total}</span>
-                    <span>Thành công: ${result.successful}</span>
-                    <span>Thất bại: ${result.total - result.successful}</span>
-                </div>
-                <p><strong>Trạng thái:</strong> ${result.message}</p>
-            `;
-            
-            if (result.tokens) {
-                Object.entries(result.tokens).forEach(([type, token]) => {
-                    const isSuccess = token !== null;
+            if (requestedType === 'ALL') {
+                // Hiển thị kết quả tất cả token
+                html += `
+                    <h3>Kết quả tất cả token</h3>
+                    <div class="stats">
+                        <span>Tổng: ${result.total}</span>
+                        <span>Thành công: ${result.successful}</span>
+                        <span>Thất bại: ${result.total - result.successful}</span>
+                    </div>
+                    <p><strong>Trạng thái:</strong> ${result.message}</p>
+                `;
+                
+                if (result.tokens) {
+                    Object.entries(result.tokens).forEach(([type, token]) => {
+                        const isSuccess = token !== null;
+                        html += `
+                            <div class="token-item ${isSuccess ? 'token-success' : 'token-failed'}">
+                                <div class="token-type">${type}: ${isSuccess ? '✅ Thành công' : '❌ Thất bại'}</div>
+                                ${isSuccess ? `
+                                    <div class="token-value">${token}</div>
+                                    <button onclick="copyToClipboard('${token}')" style="margin-top: 5px; padding: 5px 10px; font-size: 12px;">Sao chép Token</button>
+                                ` : ''}
+                            </div>
+                        `;
+                    });
+                }
+            } else {
+                // Hiển thị kết quả token đơn lẻ
+                html += `
+                    <h3>Kết quả: ${result.tokenType}</h3>
+                    <p><strong>Trạng thái:</strong> ${result.message}</p>
+                    <p><strong>Mã:</strong> ${result.code}</p>
+                `;
+                
+                if (result.token) {
                     html += `
-                        <div class="token-item ${isSuccess ? 'token-success' : 'token-failed'}">
-                            <div class="token-type">${type}: ${isSuccess ? '✅ Thành công' : '❌ Thất bại'}</div>
-                            ${isSuccess ? `<div class="token-value">${token}</div>
-                            <button onclick="copyToClipboard('${token}')" style="margin-top: 5px; padding: 5px 10px; font-size: 12px;">Sao chép</button>` : ''}
+                        <div class="token-item token-success">
+                            <div class="token-type">Token:</div>
+                            <div class="token-value">${result.token}</div>
+                            <button onclick="copyToClipboard('${result.token}')" style="margin-top: 10px;">Sao chép Token</button>
                         </div>
                     `;
-                });
+                }
             }
             
             resultDiv.innerHTML = html;
