@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Facebook Token Generator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -19,7 +20,7 @@
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1000px;
             margin: 0 auto;
         }
 
@@ -30,176 +31,277 @@
         }
 
         .header h1 {
-            font-size: 2.5rem;
+            font-size: 2.8rem;
             margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
 
         .header p {
-            font-size: 1.1rem;
+            font-size: 1.2rem;
             opacity: 0.9;
         }
 
         .card {
             background: white;
-            border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            margin-bottom: 20px;
+            border-radius: 20px;
+            padding: 35px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            margin-bottom: 25px;
+            backdrop-filter: blur(10px);
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
 
         label {
             display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #333;
+            margin-bottom: 10px;
+            font-weight: 700;
+            color: #2d3748;
+            font-size: 1.1rem;
         }
 
         textarea, select, button {
             width: 100%;
-            padding: 12px;
+            padding: 15px;
             border: 2px solid #e1e5e9;
-            border-radius: 8px;
-            font-size: 14px;
+            border-radius: 12px;
+            font-size: 16px;
             transition: all 0.3s ease;
         }
 
         textarea {
-            height: 120px;
+            height: 140px;
             resize: vertical;
-            font-family: monospace;
+            font-family: 'Courier New', monospace;
+            background: #f8fafc;
         }
 
         textarea:focus, select:focus {
             outline: none;
             border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
+            background: white;
         }
 
         .button-group {
             display: flex;
-            gap: 10px;
-            margin-top: 20px;
+            gap: 15px;
+            margin-top: 25px;
         }
 
         button {
             flex: 1;
-            background: #667eea;
+            background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
             border: none;
-            padding: 15px;
+            padding: 18px;
             font-size: 16px;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
-            border-radius: 8px;
+            border-radius: 12px;
             transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
 
         button:hover {
-            background: #5a6fd8;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
         }
 
         button:active {
-            transform: translateY(0);
+            transform: translateY(-1px);
         }
 
         button.secondary {
-            background: #6c757d;
+            background: linear-gradient(135deg, #6c757d, #495057);
         }
 
         button.secondary:hover {
-            background: #5a6268;
+            background: linear-gradient(135deg, #5a6268, #343a40);
         }
 
-        .result {
-            margin-top: 20px;
+        .result-section {
+            margin-top: 30px;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .result-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
             padding: 20px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            border-left: 4px solid #667eea;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            justify-content: space-around;
         }
 
-        .token-result {
-            background: #e8f5e8;
-            border-left-color: #28a745;
+        .stat-item {
+            text-align: center;
         }
 
-        .error {
-            background: #f8d7da;
-            border-left-color: #dc3545;
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 800;
+            display: block;
         }
 
-        .token-item {
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .tokens-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .token-card {
             background: white;
-            padding: 15px;
-            margin: 10px 0;
-            border-radius: 8px;
-            border: 1px solid #e1e5e9;
+            border-radius: 15px;
+            padding: 20px;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
         }
 
-        .token-success {
-            border-left: 4px solid #28a745;
+        .token-card.success {
+            border-color: #10b981;
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
         }
 
-        .token-failed {
-            border-left: 4px solid #dc3545;
+        .token-card.failed {
+            border-color: #ef4444;
+            background: linear-gradient(135deg, #fef2f2, #fee2e2);
+        }
+
+        .token-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 15px;
         }
 
         .token-type {
-            font-weight: bold;
-            color: #333;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .token-status {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .status-failed {
+            background: #ef4444;
+            color: white;
         }
 
         .token-value {
-            font-family: monospace;
-            background: #f8f9fa;
-            padding: 8px;
-            border-radius: 4px;
-            margin-top: 5px;
+            font-family: 'Courier New', monospace;
+            background: rgba(255,255,255,0.7);
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 10px;
             word-break: break-all;
+            font-size: 0.9rem;
+            border: 1px solid #e9ecef;
         }
 
-        .cookie-value {
-            font-family: monospace;
-            background: #fff3cd;
-            padding: 8px;
-            border-radius: 4px;
-            margin-top: 5px;
-            word-break: break-all;
-            border-left: 3px solid #ffc107;
+        .copy-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            margin-top: 10px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .copy-btn:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
         }
 
         .loading {
             text-align: center;
-            padding: 20px;
+            padding: 40px;
             color: #667eea;
+        }
+
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         .hidden {
             display: none;
         }
 
-        .stats {
-            display: flex;
-            justify-content: space-between;
-            background: #667eea;
-            color: white;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 15px;
+        .success-animation {
+            animation: successPulse 0.6s ease-in-out;
         }
 
-        .info-box {
-            background: #d1ecf1;
-            border-left: 4px solid #17a2b8;
-            padding: 15px;
+        @keyframes successPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #6b7280;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
             margin-bottom: 15px;
-            border-radius: 8px;
+            color: #9ca3af;
         }
 
         @media (max-width: 768px) {
@@ -208,11 +310,20 @@
             }
             
             .header h1 {
-                font-size: 2rem;
+                font-size: 2.2rem;
             }
             
             .button-group {
                 flex-direction: column;
+            }
+            
+            .tokens-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats {
+                flex-direction: column;
+                gap: 15px;
             }
         }
     </style>
@@ -220,19 +331,13 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🔐 Facebook Token Generator</h1>
+            <h1><i class="fas fa-key"></i> Facebook Token Generator</h1>
             <p>Nhập cookie Facebook để lấy access token</p>
         </div>
 
         <div class="card">
-            <div class="info-box">
-                <strong>📝 Hướng dẫn sử dụng:</strong>
-                <p>Endpoint: <code>GET /api/token?cookie={cookie}&type={tokenType}</code></p>
-                <p>Cookie sẽ được tự động encode và decode</p>
-            </div>
-
             <div class="form-group">
-                <label for="cookieInput">Facebook Cookie:</label>
+                <label for="cookieInput"><i class="fas fa-cookie"></i> Facebook Cookie:</label>
                 <textarea 
                     id="cookieInput" 
                     placeholder="Nhập cookie Facebook của bạn ở đây... (ví dụ: sb=...; datr=...; c_user=...; xs=...; fr=...)"
@@ -240,7 +345,7 @@
             </div>
 
             <div class="form-group">
-                <label for="tokenType">Loại Token:</label>
+                <label for="tokenType"><i class="fas fa-list"></i> Loại Token:</label>
                 <select id="tokenType">
                     <option value="ALL">Tất cả các loại token</option>
                     <!-- Options will be populated by JavaScript -->
@@ -248,17 +353,30 @@
             </div>
 
             <div class="button-group">
-                <button onclick="getToken()" id="getTokenBtn">Lấy Token</button>
-                <button onclick="clearResults()" class="secondary">Xóa Kết Quả</button>
+                <button onclick="getToken()" id="getTokenBtn">
+                    <i class="fas fa-bolt"></i> Lấy Token
+                </button>
+                <button onclick="clearResults()" class="secondary">
+                    <i class="fas fa-broom"></i> Xóa Kết Quả
+                </button>
             </div>
         </div>
 
         <div id="loading" class="loading hidden">
-            <p>⏳ Đang xử lý, vui lòng chờ...</p>
+            <div class="loading-spinner"></div>
+            <p>Đang xử lý, vui lòng chờ...</p>
         </div>
 
         <div id="result" class="card hidden">
-            <!-- Results will be displayed here -->
+            <div class="result-header">
+                <div class="result-title">
+                    <i class="fas fa-check-circle"></i> Kết Quả Token
+                </div>
+                <div id="resultStats"></div>
+            </div>
+            <div id="resultContent">
+                <!-- Results will be displayed here -->
+            </div>
         </div>
     </div>
 
@@ -297,6 +415,7 @@
             }
 
             showLoading();
+            hideResult();
             
             try {
                 // Encode cookie trước khi gửi
@@ -316,80 +435,125 @@
 
         function displayResult(result, requestedType) {
             const resultDiv = document.getElementById('result');
-            
-            if (result.code === 200) {
-                resultDiv.className = 'card token-result';
-            } else {
-                resultDiv.className = 'card error';
-            }
+            const resultContent = document.getElementById('resultContent');
+            const resultStats = document.getElementById('resultStats');
             
             let html = '';
-            
-            // Hiển thị cookie
-            if (result.cookie) {
-                html += `
-                    <div class="info-box">
-                        <h4>🔑 Cookie đã sử dụng:</h4>
-                        <div class="cookie-value">${result.cookie}</div>
-                    </div>
-                `;
-            }
-            
+            let statsHtml = '';
+
             if (requestedType === 'ALL') {
                 // Hiển thị kết quả tất cả token
-                html += `
-                    <h3>Kết quả tất cả token</h3>
-                    <div class="stats">
-                        <span>Tổng: ${result.total}</span>
-                        <span>Thành công: ${result.successful}</span>
-                        <span>Thất bại: ${result.total - result.successful}</span>
-                    </div>
-                    <p><strong>Trạng thái:</strong> ${result.message}</p>
-                `;
+                const successfulTokens = Object.values(result.tokens || {}).filter(token => token !== null).length;
+                const totalTokens = Object.keys(result.tokens || {}).length;
                 
-                if (result.tokens) {
-                    Object.entries(result.tokens).forEach(([type, token]) => {
-                        const isSuccess = token !== null;
-                        html += `
-                            <div class="token-item ${isSuccess ? 'token-success' : 'token-failed'}">
-                                <div class="token-type">${type}: ${isSuccess ? '✅ Thành công' : '❌ Thất bại'}</div>
-                                ${isSuccess ? `
-                                    <div class="token-value">${token}</div>
-                                    <button onclick="copyToClipboard('${token}')" style="margin-top: 5px; padding: 5px 10px; font-size: 12px;">Sao chép Token</button>
-                                ` : ''}
+                statsHtml = `
+                    <div style="display: flex; gap: 15px; font-size: 0.9rem; color: #6b7280;">
+                        <span><i class="fas fa-check" style="color: #10b981;"></i> ${successfulTokens} thành công</span>
+                        <span><i class="fas fa-times" style="color: #ef4444;"></i> ${totalTokens - successfulTokens} thất bại</span>
+                    </div>
+                `;
+
+                if (successfulTokens > 0) {
+                    html += `
+                        <div class="stats">
+                            <div class="stat-item">
+                                <span class="stat-number">${successfulTokens}</span>
+                                <span class="stat-label">Token Thành Công</span>
                             </div>
-                        `;
+                            <div class="stat-item">
+                                <span class="stat-number">${totalTokens}</span>
+                                <span class="stat-label">Tổng Số Token</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-number">${Math.round((successfulTokens/totalTokens)*100)}%</span>
+                                <span class="stat-label">Tỷ Lệ Thành Công</span>
+                            </div>
+                        </div>
+                    `;
+
+                    html += `<div class="tokens-grid">`;
+                    
+                    Object.entries(result.tokens || {}).forEach(([type, token]) => {
+                        if (token !== null) {
+                            html += `
+                                <div class="token-card success">
+                                    <div class="token-header">
+                                        <div class="token-type">${type}</div>
+                                        <div class="token-status status-success">Thành công</div>
+                                    </div>
+                                    <div class="token-value">${token}</div>
+                                    <button class="copy-btn" onclick="copyToClipboard('${token}')">
+                                        <i class="fas fa-copy"></i> Sao chép
+                                    </button>
+                                </div>
+                            `;
+                        }
                     });
+                    
+                    html += `</div>`;
+                } else {
+                    html = `
+                        <div class="empty-state">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <h3>Không có token nào được tạo thành công</h3>
+                            <p>Vui lòng kiểm tra lại cookie và thử lại</p>
+                        </div>
+                    `;
                 }
             } else {
                 // Hiển thị kết quả token đơn lẻ
-                html += `
-                    <h3>Kết quả: ${result.tokenType}</h3>
-                    <p><strong>Trạng thái:</strong> ${result.message}</p>
-                    <p><strong>Mã:</strong> ${result.code}</p>
-                `;
-                
-                if (result.token) {
-                    html += `
-                        <div class="token-item token-success">
-                            <div class="token-type">Token:</div>
-                            <div class="token-value">${result.token}</div>
-                            <button onclick="copyToClipboard('${result.token}')" style="margin-top: 10px;">Sao chép Token</button>
+                if (result.code === 200 && result.token) {
+                    statsHtml = `<span style="color: #10b981;"><i class="fas fa-check-circle"></i> Thành công</span>`;
+                    
+                    html = `
+                        <div class="token-card success" style="max-width: 600px; margin: 0 auto;">
+                            <div class="token-header">
+                                <div class="token-type">${result.tokenType}</div>
+                                <div class="token-status status-success">Thành công</div>
+                            </div>
+                            <div style="margin: 15px 0;">
+                                <strong>Token:</strong>
+                                <div class="token-value">${result.token}</div>
+                            </div>
+                            <button class="copy-btn" onclick="copyToClipboard('${result.token}')" style="width: 100%; padding: 12px;">
+                                <i class="fas fa-copy"></i> Sao chép Token
+                            </button>
+                        </div>
+                    `;
+                } else {
+                    html = `
+                        <div class="empty-state">
+                            <i class="fas fa-times-circle" style="color: #ef4444;"></i>
+                            <h3>Không thể tạo token</h3>
+                            <p>${result.message || 'Đã xảy ra lỗi'}</p>
                         </div>
                     `;
                 }
             }
             
-            resultDiv.innerHTML = html;
+            resultStats.innerHTML = statsHtml;
+            resultContent.innerHTML = html;
             resultDiv.classList.remove('hidden');
+            
+            // Thêm hiệu ứng success
+            setTimeout(() => {
+                resultDiv.classList.add('success-animation');
+                setTimeout(() => {
+                    resultDiv.classList.remove('success-animation');
+                }, 600);
+            }, 100);
         }
 
         function displayError(message) {
             const resultDiv = document.getElementById('result');
-            resultDiv.className = 'card error';
-            resultDiv.innerHTML = `
-                <h3>Lỗi</h3>
-                <p>${message}</p>
+            const resultContent = document.getElementById('resultContent');
+            
+            resultContent.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-exclamation-circle" style="color: #ef4444;"></i>
+                    <h3>Lỗi</h3>
+                    <p>${message}</p>
+                </div>
             `;
             resultDiv.classList.remove('hidden');
         }
@@ -402,6 +566,10 @@
             document.getElementById('loading').classList.add('hidden');
         }
 
+        function hideResult() {
+            document.getElementById('result').classList.add('hidden');
+        }
+
         function clearResults() {
             document.getElementById('result').classList.add('hidden');
             document.getElementById('cookieInput').value = '';
@@ -409,9 +577,19 @@
 
         function copyToClipboard(text) {
             navigator.clipboard.writeText(text).then(() => {
-                alert('Đã sao chép token vào clipboard!');
+                // Hiển thị thông báo thành công
+                const btn = event.target;
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check"></i> Đã sao chép!';
+                btn.style.background = '#10b981';
+                
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.style.background = '#3b82f6';
+                }, 2000);
             }).catch(err => {
                 console.error('Failed to copy: ', err);
+                alert('Lỗi khi sao chép!');
             });
         }
     </script>
