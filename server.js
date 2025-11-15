@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const { getTokenByType, getAllTokens, getTokenTypes, APP_IDS } = require('./token');
+const { getTokenByType, getAllTokens, getAllTokensTurbo, getTokenTypes, APP_IDS } = require('./token');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -20,14 +20,13 @@ app.get('/', (req, res) => {
 // Endpoint duy nhất: /api/token
 app.get('/api/token', async (req, res) => {
   try {
-    const { cookie, type } = req.query;
+    const { cookie, type, turbo } = req.query;
 
     if (!cookie) {
       return res.status(400).json({
         message: 'Thiếu cookie',
         code: 400,
-        token: null,
-        cookie: null
+        token: null
       });
     }
 
@@ -35,8 +34,7 @@ app.get('/api/token', async (req, res) => {
       return res.status(400).json({
         message: 'Thiếu loại token',
         code: 400,
-        token: null,
-        cookie: null
+        token: null
       });
     }
 
@@ -44,17 +42,18 @@ app.get('/api/token', async (req, res) => {
     const decodedCookie = decodeURIComponent(cookie);
 
     if (type.toUpperCase() === 'ALL') {
-      // Lấy tất cả token
-      const tokens = await getAllTokens(decodedCookie);
-      const successfulTokens = Object.values(tokens).filter(token => token !== null).length;
+      // Lấy tất cả token với turbo mode nếu được yêu cầu
+      const result = turbo === 'true' ? 
+        await getAllTokensTurbo(decodedCookie) : 
+        await getAllTokens(decodedCookie);
       
       return res.json({
-        message: `Lấy được ${successfulTokens}/${Object.keys(tokens).length} token`,
+        message: `Lấy được ${result.successful}/${result.total} token${turbo === 'true' ? ' (Turbo Mode)' : ''}`,
         code: 200,
-        tokens: tokens,
-        cookie: decodedCookie,
-        total: Object.keys(tokens).length,
-        successful: successfulTokens
+        tokens: result.tokens,
+        total: result.total,
+        successful: result.successful,
+        turbo: turbo === 'true'
       });
     } else {
       // Lấy token theo loại
@@ -62,8 +61,7 @@ app.get('/api/token', async (req, res) => {
       
       res.json({
         tokenType: type.toUpperCase(),
-        ...result,
-        cookie: decodedCookie
+        ...result
       });
     }
 
@@ -73,7 +71,6 @@ app.get('/api/token', async (req, res) => {
       message: 'Lỗi server',
       code: 500,
       token: null,
-      cookie: null,
       error: error.message
     });
   }
@@ -99,7 +96,7 @@ app.use('*', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-  console.log(`Endpoint: GET /api/token?cookie={cookie}&type={tokenType}`);
-  console.log(`Available token types: ${getTokenTypes().join(', ')}`);
+  console.log(`🚀 Server Turbo đang chạy trên http://localhost:${PORT}`);
+  console.log(`⚡ Endpoint: GET /api/token?cookie={cookie}&type={tokenType}&turbo=true`);
+  console.log(`📊 Số loại token: ${getTokenTypes().length}`);
 });
