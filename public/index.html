@@ -62,7 +62,7 @@
             font-size: 1.1rem;
         }
 
-        textarea, select, button {
+        textarea, select, button, input {
             width: 100%;
             padding: 15px;
             border: 2px solid #e1e5e9;
@@ -78,11 +78,22 @@
             background: #f8fafc;
         }
 
-        textarea:focus, select:focus {
+        textarea:focus, select:focus, input:focus {
             outline: none;
             border-color: #667eea;
             box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
             background: white;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .checkbox-group input {
+            width: auto;
         }
 
         .button-group {
@@ -194,11 +205,12 @@
         .token-card.failed {
             border-color: #ef4444;
             background: linear-gradient(135deg, #fef2f2, #fee2e2);
+            opacity: 0.7;
         }
 
         .token-header {
             display: flex;
-            justify-content: between;
+            justify-content: space-between;
             align-items: center;
             margin-bottom: 15px;
         }
@@ -235,6 +247,7 @@
             word-break: break-all;
             font-size: 0.9rem;
             border: 1px solid #e9ecef;
+            line-height: 1.4;
         }
 
         .copy-btn {
@@ -304,6 +317,16 @@
             color: #9ca3af;
         }
 
+        .turbo-badge {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            margin-left: 8px;
+        }
+
         @media (max-width: 768px) {
             .container {
                 padding: 10px;
@@ -331,8 +354,8 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1><i class="fas fa-key"></i> Facebook Token Generator</h1>
-            <p>Nhập cookie Facebook để lấy access token</p>
+            <h1><i class="fas fa-bolt"></i> Facebook Token Turbo</h1>
+            <p>Nhập cookie Facebook để lấy access token siêu tốc</p>
         </div>
 
         <div class="card">
@@ -352,6 +375,13 @@
                 </select>
             </div>
 
+            <div class="checkbox-group">
+                <input type="checkbox" id="turboMode" checked>
+                <label for="turboMode" style="margin: 0; font-weight: 600;">
+                    <i class="fas fa-rocket"></i> Turbo Mode (Siêu tốc)
+                </label>
+            </div>
+
             <div class="button-group">
                 <button onclick="getToken()" id="getTokenBtn">
                     <i class="fas fa-bolt"></i> Lấy Token
@@ -364,13 +394,14 @@
 
         <div id="loading" class="loading hidden">
             <div class="loading-spinner"></div>
-            <p>Đang xử lý, vui lòng chờ...</p>
+            <p id="loadingText">Đang xử lý, vui lòng chờ...</p>
         </div>
 
         <div id="result" class="card hidden">
             <div class="result-header">
                 <div class="result-title">
                     <i class="fas fa-check-circle"></i> Kết Quả Token
+                    <span id="turboBadge" class="turbo-badge hidden">TURBO</span>
                 </div>
                 <div id="resultStats"></div>
             </div>
@@ -408,24 +439,25 @@
         async function getToken() {
             const cookie = document.getElementById('cookieInput').value.trim();
             const tokenType = document.getElementById('tokenType').value;
+            const turboMode = document.getElementById('turboMode').checked;
             
             if (!cookie) {
                 alert('Vui lòng nhập cookie Facebook!');
                 return;
             }
 
-            showLoading();
+            showLoading(tokenType, turboMode);
             hideResult();
             
             try {
                 // Encode cookie trước khi gửi
                 const encodedCookie = encodeURIComponent(cookie);
-                const url = `/api/token?cookie=${encodedCookie}&type=${tokenType}`;
+                const url = `/api/token?cookie=${encodedCookie}&type=${tokenType}${turboMode ? '&turbo=true' : ''}`;
                 
                 const response = await fetch(url);
                 const result = await response.json();
                 
-                displayResult(result, tokenType);
+                displayResult(result, tokenType, turboMode);
             } catch (error) {
                 displayError('Lỗi kết nối: ' + error.message);
             } finally {
@@ -433,18 +465,26 @@
             }
         }
 
-        function displayResult(result, requestedType) {
+        function displayResult(result, requestedType, turboMode) {
             const resultDiv = document.getElementById('result');
             const resultContent = document.getElementById('resultContent');
             const resultStats = document.getElementById('resultStats');
+            const turboBadge = document.getElementById('turboBadge');
             
             let html = '';
             let statsHtml = '';
 
+            // Hiển thị turbo badge nếu sử dụng turbo mode
+            if (turboMode && requestedType === 'ALL') {
+                turboBadge.classList.remove('hidden');
+            } else {
+                turboBadge.classList.add('hidden');
+            }
+
             if (requestedType === 'ALL') {
                 // Hiển thị kết quả tất cả token
-                const successfulTokens = Object.values(result.tokens || {}).filter(token => token !== null).length;
-                const totalTokens = Object.keys(result.tokens || {}).length;
+                const successfulTokens = result.successful || 0;
+                const totalTokens = result.total || 0;
                 
                 statsHtml = `
                     <div style="display: flex; gap: 15px; font-size: 0.9rem; color: #6b7280;">
@@ -473,18 +513,35 @@
 
                     html += `<div class="tokens-grid">`;
                     
+                    // Lặp qua tất cả tokens và chỉ hiển thị những token thành công
                     Object.entries(result.tokens || {}).forEach(([type, token]) => {
-                        if (token !== null) {
+                        if (token !== null && token !== undefined) {
+                            // Đảm bảo token là string
+                            const tokenString = typeof token === 'string' ? token : String(token);
+                            
                             html += `
                                 <div class="token-card success">
                                     <div class="token-header">
                                         <div class="token-type">${type}</div>
                                         <div class="token-status status-success">Thành công</div>
                                     </div>
-                                    <div class="token-value">${token}</div>
-                                    <button class="copy-btn" onclick="copyToClipboard('${token}')">
+                                    <div class="token-value">${tokenString}</div>
+                                    <button class="copy-btn" onclick="copyToClipboard('${tokenString.replace(/'/g, "\\'")}')">
                                         <i class="fas fa-copy"></i> Sao chép
                                     </button>
+                                </div>
+                            `;
+                        } else {
+                            // Hiển thị token thất bại (tùy chọn)
+                            html += `
+                                <div class="token-card failed">
+                                    <div class="token-header">
+                                        <div class="token-type">${type}</div>
+                                        <div class="token-status status-failed">Thất bại</div>
+                                    </div>
+                                    <div class="token-value" style="color: #6b7280; font-style: italic;">
+                                        Không thể lấy token
+                                    </div>
                                 </div>
                             `;
                         }
@@ -497,6 +554,9 @@
                             <i class="fas fa-exclamation-triangle"></i>
                             <h3>Không có token nào được tạo thành công</h3>
                             <p>Vui lòng kiểm tra lại cookie và thử lại</p>
+                            <p style="margin-top: 10px; font-size: 0.9rem; color: #ef4444;">
+                                ${result.message || 'Cookie có thể đã hết hạn hoặc không hợp lệ'}
+                            </p>
                         </div>
                     `;
                 }
@@ -504,6 +564,9 @@
                 // Hiển thị kết quả token đơn lẻ
                 if (result.code === 200 && result.token) {
                     statsHtml = `<span style="color: #10b981;"><i class="fas fa-check-circle"></i> Thành công</span>`;
+                    
+                    // Đảm bảo token là string
+                    const tokenString = typeof result.token === 'string' ? result.token : String(result.token);
                     
                     html = `
                         <div class="token-card success" style="max-width: 600px; margin: 0 auto;">
@@ -513,9 +576,12 @@
                             </div>
                             <div style="margin: 15px 0;">
                                 <strong>Token:</strong>
-                                <div class="token-value">${result.token}</div>
+                                <div class="token-value">${tokenString}</div>
                             </div>
-                            <button class="copy-btn" onclick="copyToClipboard('${result.token}')" style="width: 100%; padding: 12px;">
+                            <div style="margin: 10px 0; color: #6b7280; font-size: 0.9rem;">
+                                <i class="fas fa-clock"></i> Thời gian: ${result.time || 'N/A'}ms
+                            </div>
+                            <button class="copy-btn" onclick="copyToClipboard('${tokenString.replace(/'/g, "\\'")}')" style="width: 100%; padding: 12px;">
                                 <i class="fas fa-copy"></i> Sao chép Token
                             </button>
                         </div>
@@ -526,6 +592,7 @@
                             <i class="fas fa-times-circle" style="color: #ef4444;"></i>
                             <h3>Không thể tạo token</h3>
                             <p>${result.message || 'Đã xảy ra lỗi'}</p>
+                            ${result.time ? `<p style="margin-top: 10px; color: #6b7280;">Thời gian: ${result.time}ms</p>` : ''}
                         </div>
                     `;
                 }
@@ -558,7 +625,15 @@
             resultDiv.classList.remove('hidden');
         }
 
-        function showLoading() {
+        function showLoading(tokenType, turboMode) {
+            const loadingText = document.getElementById('loadingText');
+            if (tokenType === 'ALL' && turboMode) {
+                loadingText.textContent = '🚀 Đang xử lý siêu tốc, vui lòng chờ...';
+            } else if (tokenType === 'ALL') {
+                loadingText.textContent = '⚡ Đang xử lý, vui lòng chờ...';
+            } else {
+                loadingText.textContent = 'Đang xử lý, vui lòng chờ...';
+            }
             document.getElementById('loading').classList.remove('hidden');
         }
 
@@ -573,10 +648,14 @@
         function clearResults() {
             document.getElementById('result').classList.add('hidden');
             document.getElementById('cookieInput').value = '';
+            document.getElementById('turboBadge').classList.add('hidden');
         }
 
         function copyToClipboard(text) {
-            navigator.clipboard.writeText(text).then(() => {
+            // Xử lý các ký tự đặc biệt trong text
+            const cleanText = text.replace(/\\'/g, "'");
+            
+            navigator.clipboard.writeText(cleanText).then(() => {
                 // Hiển thị thông báo thành công
                 const btn = event.target;
                 const originalText = btn.innerHTML;
